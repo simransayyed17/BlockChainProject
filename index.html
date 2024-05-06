@@ -26,7 +26,7 @@
         let contract; // The contract instance
         let transactionHashes = {}; // Object to store item ID to transaction hash mapping
 
-        const contractAddress = "0xC388147F21ecC25c8727F6AA7EA15E4193c2C754";
+        const contractAddress = "0x2B649BC92031aF97eBEd3622A31BbBE612E81920";
         const contractABI = [
         {
             "inputs": [
@@ -340,11 +340,13 @@ async function loadItems(userAccount) {
         li.appendChild(descriptionDiv);
         li.appendChild(listedByDiv);
 
+
         if (transactionHashes[i]) {
             const hashDiv = document.createElement('div');
-            hashDiv.innerHTML = `<strong>Listing Transaction Hash:</strong> <a href="https://etherscan.io/tx/${transactionHashes[i]}" target="_blank">${transactionHashes[i]}</a>`;
+            hashDiv.innerHTML = `<strong>Listing Transaction Hash:</strong> <a href="https://sepolia.etherscan.io/tx/${transactionHashes[i]}" target="_blank">${transactionHashes[i]}</a>`;
             li.appendChild(hashDiv);
         }
+        
     
         if (!item.isSold) {
             const buyButton = document.createElement('button');
@@ -369,7 +371,7 @@ async function loadItems(userAccount) {
                 
                         // Create a div to show the transaction hash and append it immediately
                         const hashDiv = document.createElement('div');
-                        hashDiv.innerHTML = `<strong>Buying Transaction Hash:</strong> <a href="https://etherscan.io/tx/${transactionResponse.hash}" target="_blank">${transactionResponse.hash}</a>`;
+                        hashDiv.innerHTML = `<strong>Buying Transaction Hash:</strong> <a href="https://sepolia.etherscan.io/tx/${transactionResponse.hash}" target="_blank">${transactionResponse.hash}</a>`;
                         li.appendChild(hashDiv);
                 
                         // Optionally, wait a moment before reloading items to see the hash in the UI
