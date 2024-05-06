@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Marketplace</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1>Stay Hydrated</h1>
+    <button id="connectButton">Connect to MetaMask</button>
+    <p id="accountInfo">Connected account: None</p>
+
+    <h2>List a New Water Item</h2>
+    <input id="title" type="text" placeholder="Title" required>
+    <input id="description" type="text" placeholder="Description" required>
+    <input id="price" type="number" placeholder="Price in ETH" required>
+    <button onclick="listItem()">List Item</button>
+
+    <h2>Waters Available for Purchase</h2>
+    <ul id="itemsList"></ul>
+
+    <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js" type="application/javascript"></script>
+    <script type="text/javascript">
+        let accounts = null;
+        let contract; // The contract instance
+        let transactionHashes = {}; // Object to store item ID to transaction hash mapping
+
+        const contractAddress = "0xC388147F21ecC25c8727F6AA7EA15E4193c2C754";
+        const contractABI = [
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "_id",
+                    "type": "uint256"
+                }
+            ],
+            "name": "buyItem",
+            "outputs": [],
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "internalType": "uint256",
+                    "name": "id",
+                    "type": "uint256"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "string",
+                    "name": "title",
+                    "type": "string"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "string",
+                    "name": "description",
+                    "type": "string"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "price",
+                    "type": "uint256"
+                },
+                {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "seller",
+                    "type": "address"
+                }
+            ],
+            "name": "ItemListed",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "internalType": "uint256",
+                    "name": "id",
+                    "type": "uint256"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "string",
+                    "name": "title",
+                    "type": "string"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "price",
+                    "type": "uint256"
+                },
+                {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "seller",
+                    "type": "address"
+                },
+                {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "buyer",
+                    "type": "address"
+                }
+            ],
+            "name": "ItemPurchased",
+            "type": "event"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "string",
+                    "name": "_title",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "_description",
+                    "type": "string"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_priceInWei",
+                    "type": "uint256"
+                }
+            ],
+            "name": "listItem",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "getAllItems",
+            "outputs": [
+                {
+                    "components": [
+                        {
+                            "internalType": "uint256",
+                            "name": "id",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "title",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "description",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "price",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "address payable",
+                            "name": "seller",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "buyer",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "bool",
+                            "name": "isSold",
+                            "type": "bool"
+                        }
+                    ],
+                    "internalType": "struct Marketplace.Item[]",
+                    "name": "",
+                    "type": "tuple[]"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "itemCount",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "name": "items",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "id",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "string",
+                    "name": "title",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "description",
+                    "type": "string"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "price",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "address payable",
+                    "name": "seller",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "buyer",
+                    "type": "address"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "isSold",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ];
+
+
+
+
+    document.getElementById('connectButton').addEventListener('click', async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                    if (accounts.length > 0) {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const signer = provider.getSigner();
+                        contract = new ethers.Contract(contractAddress, contractABI, signer);
+                        console.log('Wallet connected');
+                        document.getElementById('accountInfo').textContent = `Connected account: ${accounts[0]}`;
+                        loadItems(accounts);
+                    } else {
+                        console.log('No accounts found');
+                        alert('No accounts found. Please connect to MetaMask.');
+                    }
+                } catch (error) {
+                    console.error('Failed to load Ethereum interface or user denied access.', error);
+                    alert('Failed to load Ethereum interface or user denied access.');
+                }
+            } else {
+                alert('MetaMask is not installed. Please install MetaMask to use this application.');
+            }
+        });
+        
+        
+        async function listItem() {
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const price = document.getElementById('price').value;
+            const priceInWei = ethers.utils.parseUnits(price, 'ether');
+        
+            try {
+                const transactionResponse = await contract.listItem(title, description, priceInWei);
+            const receipt = await transactionResponse.wait();
+            console.log('Item listed successfully! Transaction Hash:', transactionResponse.hash);
+            transactionHashes[receipt.events[0].args.id.toString()] = transactionResponse.hash; // Store transaction hash using item ID
+
+
+                setTimeout(() => {
+                    loadItems(); 
+                    
+                    // Reload items to update the list
+                }, 3000);
+
+        
+            } catch (error) {
+                console.error('Failed to list item:', error);
+                alert('Failed to list item: ' + error.message);
+            }
+
+            
+        }
+        
+
+async function loadItems(userAccount) {
+    if (!contract) {
+        console.log("Contract not initialized.");
+        return; // Ensure contract is initialized
+    }
+    const itemsContainer = document.getElementById('itemsList');
+    itemsContainer.innerHTML = '';
+    const itemCount = await contract.itemCount();
+   
+    
+    for (let i = 1; i <= itemCount; i++) {
+        const item = await contract.items(i);
+        const li = document.createElement('li');
+        li.className = item.isSold ? 'item-box sold' : 'item-box not-sold';
+        
+        // Create separate elements to ensure proper formatting
+        const titleDiv = document.createElement('div');
+        titleDiv.innerHTML = `<strong>Title:</strong> ${item.title}`;
+        const priceDiv = document.createElement('div');
+        priceDiv.innerHTML = `<strong>Price:</strong> ${ethers.utils.formatUnits(item.price, 'ether')} ETH`;
+        const descriptionDiv = document.createElement('div');
+        descriptionDiv.innerHTML = `<strong>Description:</strong> ${item.description}`;
+        const listedByDiv = document.createElement('div');
+        listedByDiv.innerHTML = `<strong>Listed by:</strong> ${item.seller}`;
+
+        
+        li.appendChild(titleDiv);
+        li.appendChild(priceDiv);
+        li.appendChild(descriptionDiv);
+        li.appendChild(listedByDiv);
+
+        if (transactionHashes[i]) {
+            const hashDiv = document.createElement('div');
+            hashDiv.innerHTML = `<strong>Listing Transaction Hash:</strong> <a href="https://etherscan.io/tx/${transactionHashes[i]}" target="_blank">${transactionHashes[i]}</a>`;
+            li.appendChild(hashDiv);
+        }
+    
+        if (!item.isSold) {
+            const buyButton = document.createElement('button');
+            buyButton.textContent = 'Buy';
+
+            if (userAccount[0].toLowerCase() === item.seller.toLowerCase()) {
+                // Button for seller who cannot buy their own item
+                const notForSaleButton = document.createElement('button');
+                notForSaleButton.textContent = 'You cannot buy what you sell';
+                notForSaleButton.style.backgroundColor = "#b0adad";
+                notForSaleButton.style.border = "1px solid black"; // Black border
+                notForSaleButton.disabled = true;
+                li.appendChild(notForSaleButton);
+            } else {
+                // Active buy button for other users
+                buyButton.onclick = async () => {
+                    console.log("Buy button clicked"); // Debugging output
+                    try {
+                        const transactionResponse = await contract.buyItem(i, { value: ethers.utils.parseUnits(item.price.toString(), 'wei') });
+                        const receipt = await transactionResponse.wait(); // Waiting for the transaction to be mined
+                        console.log('Item purchased successfully! Transaction Hash:', transactionResponse.hash);
+                
+                        // Create a div to show the transaction hash and append it immediately
+                        const hashDiv = document.createElement('div');
+                        hashDiv.innerHTML = `<strong>Buying Transaction Hash:</strong> <a href="https://etherscan.io/tx/${transactionResponse.hash}" target="_blank">${transactionResponse.hash}</a>`;
+                        li.appendChild(hashDiv);
+                
+                        // Optionally, wait a moment before reloading items to see the hash in the UI
+                        
+
+                    } catch (error) {
+                        console.error('Purchase failed:', error);
+                    }
+                };
+                li.appendChild(buyButton);
+            }
+        } else {
+            const soldToDiv = document.createElement('div');
+            soldToDiv.innerHTML = `<strong>Sold to:</strong> ${item.buyer}`;
+            li.appendChild(soldToDiv);
+            
+
+            
+        
+        }
+
+        itemsContainer.appendChild(li);
+    }
+}
+
+        
+
+        
+        
+    </script>
+</body>
+</html>

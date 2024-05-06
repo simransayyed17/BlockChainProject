@@ -1,0 +1,67 @@
+/* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    color: #ffffff;
+}
+
+
+body, h1, h2 {
+    color: #0056b3; /* Ensuring text is black */
+}
+
+
+input, button {
+    padding: 10px 15px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border: 2px solid #007BFF; /* Solid blue border, you can change the color as needed */
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: #efecec; /* White background for contrast */
+    color: #000000; /* Black text for readability */
+}
+
+input:focus {
+    border-color: #0056b3; /* Darker blue border on focus */
+    outline: none; /* Optional: removes the default focus outline */
+}
+
+button {
+    background-color: #33b7e2; /* Green background for buttons */
+    color: rgb(2, 2, 2); /* White text on buttons */
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #e3e1e8; /* Darker green on hover */
+}
+
+
+ul { 
+    list-style-type: none; 
+    padding: 0; 
+}
+li { 
+    background-color: rgba(59, 91, 219, 0.5);
+    margin-bottom: 10px; 
+    padding: 10px;
+    border-radius: 5px;
+}
+.item-box { 
+    border: 1px solid #ccc; 
+    padding: 10px; 
+    margin-bottom: 10px; 
+    border-radius: 5px; 
+}
+.not-sold { 
+    background-color: #90ee90; 
+    border: 1px solid #2e851a;
+}
+.sold { 
+    background-color: #ffcccb; 
+    border: 1px solid #f30909;
+}
