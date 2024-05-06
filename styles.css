@@ -10,7 +10,7 @@ body {
 
 
 body, h1, h2 {
-    color: #0056b3; /* Ensuring text is black */
+    color: #0056b3; 
 }
 
 
@@ -18,26 +18,26 @@ input, button {
     padding: 10px 15px;
     margin-top: 10px;
     margin-bottom: 10px;
-    border: 2px solid #007BFF; /* Solid blue border, you can change the color as needed */
+    border: 2px solid #007BFF; 
     border-radius: 5px;
     font-size: 16px;
-    background-color: #efecec; /* White background for contrast */
-    color: #000000; /* Black text for readability */
+    background-color: #efecec; 
+    color: #000000; 
 }
 
 input:focus {
-    border-color: #0056b3; /* Darker blue border on focus */
-    outline: none; /* Optional: removes the default focus outline */
+    border-color: #0056b3; 
+    outline: none; 
 }
 
 button {
-    background-color: #33b7e2; /* Green background for buttons */
-    color: rgb(2, 2, 2); /* White text on buttons */
+    background-color: #33b7e2;
+    color: rgb(2, 2, 2); 
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #e3e1e8; /* Darker green on hover */
+    background-color: #e3e1e8; 
 }
 
 
