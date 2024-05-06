@@ -2,7 +2,7 @@
 # BlockChains and Cryptocurrencies Project
 By: Simran Sayyed.
 
-# Decentralized Marketplace
+# Decentralized Marketplace to buy water
 This project is a marketplace that enables users to list water items for sale and purchase them using Ethereum, interacting directly with the Ethereum blockchain via smart contracts.
 
 ## Features
@@ -21,20 +21,15 @@ This project is a marketplace that enables users to list water items for sale an
 - **Remix IDE**: For developing and deploying smart contracts.
 - **Ethers.js**: A library to interact with Ethereum blockchain from the web browser.
 - **Netlify**: For hosting the frontend.
-
-## Setup and Installation
-
+  
 ### Requirements
-
-- [Node.js](https://nodejs.org/)
-- [Git](https://git-scm.com/)
 - [MetaMask](https://metamask.io/) extension installed in your web browser.
 
 ### Smart Contract Development
 The smart contracts are developed in Solidity using Remix IDE. Here are steps to deploy and test the smart contracts:
 
-Open Remix IDE.
-Create a new file and copy the Solidity code from the repository.
-Compile the contract using the Solidity Compiler in Remix.
-Deploy the contract on an environement - Injected Provider - Metamask.
-Update the deployed contract ABI and contract address in the frontend application.
+1. Open Remix IDE.
+2. Create a new file and copy the Solidity code from the repository.
+3. Compile the contract using the Solidity Compiler in Remix.
+4. Deploy the contract on an environement - Injected Provider - Metamask.
+5. Update the deployed contract ABI and contract address in the frontend application.
