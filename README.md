@@ -2,6 +2,7 @@
 # BlockChains and Cryptocurrencies Project
 By: Simran Sayyed.
 
+[Project URL](https://doyouneedwater.netlify.app/)
 # Decentralized Marketplace to buy water
 This project is a marketplace that enables users to list water items for sale and purchase them using Ethereum, interacting directly with the Ethereum blockchain via smart contracts.
 
