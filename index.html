@@ -4,28 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Water Marketplace</title>
-    <link rel="stylesheet" type="text/css" href="styles.css">
+    <link rel="stylesheet" type="text/css" href="styles.css"> <!--Importing the css file for styling the UI -->
 </head>
 <body>
     <h1>Stay Hydrated</h1>
     <button id="connectButton">Connect to MetaMask</button>
-    <p id="accountInfo">Connected account: None</p>
+    <p id="accountInfo">Connected account: None</p> <!-- Display if no account is created -->
 
     <h2>List a New Water Item</h2>
     <input id="title" type="text" placeholder="Title" required>
     <input id="description" type="text" placeholder="Description" required>
     <input id="price" type="number" placeholder="Price in ETH" required>
-    <button onclick="listItem()">List Item</button>
+    <button onclick="listItem()">List Item</button> <!--Go to function listitem() when item details are entered-->
 
     <h2>Waters Available for Purchase</h2>
-    <ul id="itemsList"></ul>
+    <ul id="itemsList"></ul> <!-- Displays the list of items -->
 
-    <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js" type="application/javascript"></script>
+    <!-- Importing ethers.js library to interact with ethereum blockchain -->
+    <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js" type="application/javascript"></script> 
     <script type="text/javascript">
-        let accounts = null;
+        let userAccount = null; // to use in the connection function as well as loaditems to compare the buyer and seller
         let contract; // The contract instance
-        let transactionHashes = {}; // Object to store item ID to transaction hash mapping
-
+        let transactionHashes = {}; // Object to store listing transaction hash used by two functions listitem and loaditem
+        // the contractaddress and ABI for linking the smart contract
         const contractAddress = "0x2B649BC92031aF97eBEd3622A31BbBE612E81920";
         const contractABI = [
         {
@@ -253,22 +254,25 @@
     ];
 
 
-
+    // connection to ethereum wallet function
 
     document.getElementById('connectButton').addEventListener('click', async () => {
             if (typeof window.ethereum !== 'undefined') {
                 try {
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                    //once a wallet is connected the account number gets stored in 'accounts'
+                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' }); 
                     if (accounts.length > 0) {
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const signer = provider.getSigner();
                         contract = new ethers.Contract(contractAddress, contractABI, signer);
                         console.log('Wallet connected');
+                        // display which account is connected
                         document.getElementById('accountInfo').textContent = `Connected account: ${accounts[0]}`;
+                        // call function and pass accounts to compare buyer and seller
                         loadItems(accounts);
                     } else {
                         console.log('No accounts found');
-                        alert('No accounts found. Please connect to MetaMask.');
+                        alert('No accounts found. Please connect to MetaMask.'); // error handling
                     }
                 } catch (error) {
                     console.error('Failed to load Ethereum interface or user denied access.', error);
@@ -279,47 +283,49 @@
             }
         });
         
-        
+        // function to list items        
         async function listItem() {
             const title = document.getElementById('title').value;
             const description = document.getElementById('description').value;
             const price = document.getElementById('price').value;
-            const priceInWei = ethers.utils.parseUnits(price, 'ether');
+            const priceInWei = ethers.utils.parseUnits(price, 'ether'); // conversion from wei to ether
         
             try {
+                // to list item and get the transaction hash for listing
                 const transactionResponse = await contract.listItem(title, description, priceInWei);
             const receipt = await transactionResponse.wait();
             console.log('Item listed successfully! Transaction Hash:', transactionResponse.hash);
             transactionHashes[receipt.events[0].args.id.toString()] = transactionResponse.hash; // Store transaction hash using item ID
 
+                // wait for some time before loading the items and refreshing the page
 
                 setTimeout(() => {
                     loadItems(); 
                     
                     // Reload items to update the list
                 }, 3000);
-
-        
             } catch (error) {
                 console.error('Failed to list item:', error);
                 alert('Failed to list item: ' + error.message);
             }
-
-            
         }
         
-
+// Funtion to load items 
 async function loadItems(userAccount) {
     if (!contract) {
         console.log("Contract not initialized.");
         return; // Ensure contract is initialized
     }
+
+    // get itemcount from the contract and make a item container from the itemslist to display them
     const itemsContainer = document.getElementById('itemsList');
     itemsContainer.innerHTML = '';
     const itemCount = await contract.itemCount();
    
-    
+    // from 1 to all items
     for (let i = 1; i <= itemCount; i++) {
+
+        // get all items from the contract and display them with a flag of sold or not sold
         const item = await contract.items(i);
         const li = document.createElement('li');
         li.className = item.isSold ? 'item-box sold' : 'item-box not-sold';
@@ -334,37 +340,39 @@ async function loadItems(userAccount) {
         const listedByDiv = document.createElement('div');
         listedByDiv.innerHTML = `<strong>Listed by:</strong> ${item.seller}`;
 
-        
+        // add all details of the item in the container and display
         li.appendChild(titleDiv);
         li.appendChild(priceDiv);
         li.appendChild(descriptionDiv);
         li.appendChild(listedByDiv);
 
-
+        // if the transaction hash becomes undefined don't display it otherwise it will be displayed in the container 
         if (transactionHashes[i]) {
             const hashDiv = document.createElement('div');
             hashDiv.innerHTML = `<strong>Listing Transaction Hash:</strong> <a href="https://sepolia.etherscan.io/tx/${transactionHashes[i]}" target="_blank">${transactionHashes[i]}</a>`;
             li.appendChild(hashDiv);
         }
         
-    
+        // check if item is sold, if not generate and display a buy button in front of it
         if (!item.isSold) {
             const buyButton = document.createElement('button');
             buyButton.textContent = 'Buy';
 
+            // if buyer is the seller
             if (userAccount[0].toLowerCase() === item.seller.toLowerCase()) {
-                // Button for seller who cannot buy their own item
+                // new button for seller who cannot buy their own item
                 const notForSaleButton = document.createElement('button');
                 notForSaleButton.textContent = 'You cannot buy what you sell';
                 notForSaleButton.style.backgroundColor = "#b0adad";
                 notForSaleButton.style.border = "1px solid black"; // Black border
                 notForSaleButton.disabled = true;
-                li.appendChild(notForSaleButton);
+                li.appendChild(notForSaleButton); // display the button in front of self listed items
             } else {
                 // Active buy button for other users
                 buyButton.onclick = async () => {
                     console.log("Buy button clicked"); // Debugging output
                     try {
+                        // get the buying transaction hash and while buying change the unit from wei to ether
                         const transactionResponse = await contract.buyItem(i, { value: ethers.utils.parseUnits(item.price.toString(), 'wei') });
                         const receipt = await transactionResponse.wait(); // Waiting for the transaction to be mined
                         console.log('Item purchased successfully! Transaction Hash:', transactionResponse.hash);
@@ -373,22 +381,18 @@ async function loadItems(userAccount) {
                         const hashDiv = document.createElement('div');
                         hashDiv.innerHTML = `<strong>Buying Transaction Hash:</strong> <a href="https://sepolia.etherscan.io/tx/${transactionResponse.hash}" target="_blank">${transactionResponse.hash}</a>`;
                         li.appendChild(hashDiv);
-                
-                        // Optionally, wait a moment before reloading items to see the hash in the UI
-                        
 
                     } catch (error) {
                         console.error('Purchase failed:', error);
                     }
                 };
-                li.appendChild(buyButton);
+                li.appendChild(buyButton); // if item is not sold and buyer and seller are different
             }
         } else {
+            // item is sold. display the address of buyer
             const soldToDiv = document.createElement('div');
             soldToDiv.innerHTML = `<strong>Sold to:</strong> ${item.buyer}`;
             li.appendChild(soldToDiv);
-            
-
             
         
         }
@@ -396,9 +400,6 @@ async function loadItems(userAccount) {
         itemsContainer.appendChild(li);
     }
 }
-
-        
-
         
         
     </script>
