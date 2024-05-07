@@ -6,9 +6,9 @@ contract Marketplace {
     // Structure to store information about an item
     struct Item {
         uint256 id;                // Unique identifier for the item
-        string title;              // Title of the item
-        string description;        // Description of the item
-        uint256 price;             // Price of the item in Wei for precision
+        string title;              // Title 
+        string description;        // Description 
+        uint256 price;             // Price in Wei 
         address payable seller;    // Address of the seller, which is payable
         address buyer;             // Address of the buyer
         bool isSold;               // Status to check if the item is sold
@@ -17,8 +17,8 @@ contract Marketplace {
     uint256 public itemCount;                  // Counter to keep track of number of items listed
     mapping(uint256 => Item) public items;     // Mapping from item ID to the Item struct
 
-    // Event emitted when a new item is listed on the marketplace
-    event ItemListed(
+    // event for listing item
+    event ItemListed(               
         uint256 indexed id,
         string title,
         string description,
@@ -26,8 +26,8 @@ contract Marketplace {
         address indexed seller
     );
 
-    // Event emitted when an item is purchased
-    event ItemPurchased(
+    // even for buying item
+    event ItemPurchased(                
         uint256 indexed id,
         string title,
         uint256 price,
@@ -35,11 +35,13 @@ contract Marketplace {
         address indexed buyer
     );
 
-    // Function to list an item on the marketplace
+    // Function to list an item on the marketplace with title, description and price
     function listItem(string memory _title, string memory _description, uint256 _priceInWei) public {
         require(_priceInWei > 0, "Price must be positive"); // Ensure the price is greater than 0
+        // price is converted from wei to eth in frontend
 
         itemCount++;  // Increment the count of items
+
         // Create a new item and add it to the map
         items[itemCount] = Item(itemCount, _title, _description, _priceInWei, payable(msg.sender), address(0), false);
 
@@ -47,7 +49,7 @@ contract Marketplace {
         emit ItemListed(itemCount, _title, _description, _priceInWei, msg.sender);
     }
 
-    // Function to buy an item using its ID
+    // Function to buy an item 
     function buyItem(uint256 _id) public payable {
         require(_id > 0 && _id <= itemCount, "Item ID does not exist"); // Check if item ID is valid
         Item storage item = items[_id];
@@ -62,13 +64,5 @@ contract Marketplace {
         // Emit an event for the purchase
         emit ItemPurchased(_id, item.title, item.price, item.seller, msg.sender);
     }
-
-    // Function to retrieve all items
-    function getAllItems() public view returns (Item[] memory) {
-        Item[] memory allItems = new Item[](itemCount);
-        for (uint256 i = 1; i <= itemCount; i++) {
-            allItems[i - 1] = items[i];
-        }
-        return allItems;
-    }
+    
 }
